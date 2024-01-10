@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>smalltalk - {{ room }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='chat_style.css') }}">
+</head>
+
+<body>
+  <h1>{{ room }}</h1>
+  <div class="displays">
+    <div id="messages"></div>
+    <div id="user_list_box">
+      <ul id="user_list"></ul>
+    </div>
+  </div>
+  <div class="displays" id="interactives">
+    <form id="message-form" onsubmit="return sendMessage()" ;>
+      <input type="text" id="message" autocomplete="off" required>
+      <button id="send-message" type="submit">Send</button>
+    </form>
+    <button id="leave-room">Leave Room</button>
+  </div>
+
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+  <script>
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+    socket.on('connect', function () {
+      socket.emit('join_socket_room', { 'room': '{{ room }}', 'username': '{{ username }}' });
+      console.log('emitted join_socket_room event to server');
+
+      // Display initial user list
+      const userListBox = document.getElementById('user_list_box');
+      const userList = document.getElementById('user_list');
+      const user_list = {{ user_list | tojson | safe
+    }};
+
+    // Remove the client's username from the list to be printed, as it will be added by the `broad_user_info` listener
+    const index = user_list.indexOf('{{ username }}');
+    user_list.splice(index, 1);
+
+
+    for (const user of user_list) {
+      const userListing = document.createElement('li');
+      userListing.appendChild(document.createTextNode(user));
+      userList.appendChild(userListing);
+    }
+    userListBox.appendChild(userList);  
+      
+    });
+
+    socket.on('update_chat', function (data) {
+      var messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML += '<p><strong>' + data.username + ':</strong> ' + data.message + '</p>';
+    });
+
+    socket.on('broadcast_user_info', function (data) {
+      // Display new user information in chat window
+      var messageDiv = document.getElementById('messages');
+      messageDiv.innerHTML += '<p><i><strong>' + data.username + '</strong> has ' + data.dir + ' the room.</i></p>';
+      console.log('someone joined or left');
+
+      // Update user list 
+      if (data.dir == "joined") {
+        addUserToList(data.username)
+      } else if (data.dir == "left") {
+        removeUserFromList(data.username)
+      }
+
+    });
+
+    document.getElementById('message-form').onsubmit = function (event) {
+      event.preventDefault();
+      var message = document.getElementById('message').value;
+      document.getElementById('message').value = '';
+      socket.emit('message', { 'room': '{{ room }}', 'username': '{{ username }}', 'message': message });
+    };
+
+
+    document.getElementById('leave-room').onclick = function () {
+      socket.emit('leave_room', { 'room': '{{ room }}', 'username': '{{ username }}' });
+      window.location.href = '/';
+    };
+
+    function addUserToList(name) {
+      console.log(name + ' has joined the room')
+      const userList = document.getElementById('user_list');
+      const newUserListing = document.createElement('li');
+      newUserListing.appendChild(document.createTextNode(name));
+      userList.appendChild(newUserListing);
+    }
+
+    function removeUserFromList(name) {
+      const userList = document.getElementById('user_list');
+
+      const listItemToRemove = Array.from(userList.children).find(function (item) {
+        return item.textContent === name;
+      });
+
+      if (listItemToRemove) {
+        userList.removeChild(listItemToRemove);
+      }
+    }
+  </script>
+</body>
+
+</html>

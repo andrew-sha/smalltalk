@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='index_style.css') }}">
+    <title>smalltalk - Home</title>
+</head>
+
+<body>
+    <h1>smalltalk</h1>
+    <div id="warnings"></div>
+    <form action="/" method="post" onsubmit=attemptJoin(event)>
+        <label for="username">Your Username:</label>
+        <input type="text" id="username" name="username" required>
+        <br>
+        <label for="room">Select a Room:</label>
+        <select id="room" name="room" onclick=clearNewRoomDiv() required>
+            <option value="custom" disabled hidden>Custom</option>
+        </select>
+        <button type='button' id='create-room' onclick=newRoomNameInput()>Create</button>
+        <div id='new-room'></div>
+        <button type="submit" id='join'>Join</button>
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.2.0/socket.io.js"></script>
+    <script>
+        // At some point check to make sure that the way you use single/double quotes is uniform
+
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        socket.on('connect', function () {
+            console.log('SocketIO connection succesfully established');
+        });
+
+        function attemptJoin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const roomType = document.getElementById('room').value;
+
+            if (roomType == "custom") {
+                const room = document.getElementById("additional-room").value;
+                socket.emit('attempt_join', { username: username, room: room, new_room: true })
+            } else {
+                socket.emit('attempt_join', { username: username, room: roomType, new_room: false })
+            }
+        };
+
+        function clearNewRoomDiv() {
+            const newRoomDiv = document.getElementById("new-room");
+
+            while (newRoomDiv.firstChild) {
+                newRoomDiv.removeChild(newRoomDiv.firstChild);
+            }
+        };
+
+        function newRoomNameInput() {
+            // Change value of dropdown menu to display 'Custom'
+            var roomSelectDropdown = document.getElementById("room");
+            roomSelectDropdown.value = "custom";
+
+
+            const newRoomNameBox = document.getElementById("new-room");
+
+            if (newRoomNameBox.innerHTML == '') {
+                const newRoomLabel = document.createElement("label");
+                newRoomLabel.for = "additional-room"
+                newRoomLabel.textContent = "Room Name:";
+
+                const newRoomInput = document.createElement("input");
+                newRoomInput.type = "text";
+                newRoomInput.id = "additional-room";
+
+
+                newRoomNameBox.appendChild(newRoomLabel);
+                newRoomNameBox.appendChild(newRoomInput);
+            } else {
+                const warningsDiv = document.getElementById("warnings");
+                warningsDiv.innerHTML = '<p>Please enter a name for your custom room.</p>';
+            };
+        };
+
+        socket.on('send_active_rooms', function (data) {
+            const selectRoom = document.getElementById("room");
+            for (const room of data) {
+                const roomOption = document.createElement("option");
+                roomOption.value = room;
+                roomOption.text = room;
+                selectRoom.add(roomOption);
+            }
+        });
+
+        socket.on('duplicate_username', function (data) {
+            var warningsDiv = document.getElementById('warnings');
+            warningsDiv.innerHTML = '<p>This username already exists in this room.</p>';
+        });
+
+        socket.on('duplicate_room_name', function (data) {
+            var warningsDiv = document.getElementById('warnings');
+            warningsDiv.innerHTML = '<p>A room with this name already exists.</p>';
+        });
+
+        socket.on('succesful_join', function (data) {
+            document.cookie = `username=${data.username}`;
+            window.location.href = '/chat/' + data.room;
+        });
+    </script>
+
+</body>
+
+</html>
