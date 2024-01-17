@@ -1,17 +1,28 @@
 * {
     font-family: monospace, monospace;
-    /*color: #333333;*/
-}
-
-h1 {
-    text-align:center;
-    font-size: 30pt;
-    margin-top: 30px;
-    margin-bottom: 40px;
 }
 
 body {
     background-color: #b3e0ff;
+}
+
+h1 {
+    margin-top: 0px;
+    margin-bottom: 30px;
+    color: #b3e0ff;
+}
+
+#label-chat {
+    position: absolute;
+    top: 2%;
+    left: 47%;
+    transform: translate(-50%);
+}
+
+#label-users {
+    position: absolute;
+    top: 2%;
+    right: 8%; 
 }
 
 #messages {
@@ -67,13 +78,14 @@ li {
 }
 
 #send-message {
-    font-size: 18px;
+    font-size: 10pt;
+    height: 50px;
     padding: 12px 12px;
     border: 2px solid #999999;
     border-radius: 6px;
     width: 8.5%;
     transition-duration: .4s;
-    text-align:center;
+    text-align: center;
     cursor: pointer;
 }
 
@@ -82,16 +94,13 @@ li {
 }
 
 #leave-room {
-    font-size: 12pt;
+    font-size: 10pt;
     padding: 12px 12px;
     border: 2px solid #999999;
     border-radius: 6px;
     transition-duration: .4s;
     width: 10%;
-    height: 47px;
-    text-align: center;
-    position: relative;
-    float: right;
+    height: 50px;
     cursor: pointer;
 }
 
