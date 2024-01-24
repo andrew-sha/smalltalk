@@ -4,6 +4,7 @@
 
 body {
     background-color: #b3e0ff;
+    color: #333333;
 }
 
 h1 {
@@ -11,6 +12,7 @@ h1 {
     position: relative;
     top: 60px;
     font-size: 50pt; 
+    color: #333333;
 }
 
 form {

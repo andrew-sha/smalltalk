@@ -46,7 +46,7 @@
 
         function clearNewRoomDiv() {
             const newRoomDiv = document.getElementById('new-room');
-
+            
             while (newRoomDiv.firstChild) {
                 newRoomDiv.removeChild(newRoomDiv.firstChild);
             }
@@ -75,10 +75,19 @@
                 newRoomNameBox.appendChild(newRoomLabel);
                 newRoomNameBox.appendChild(newRoomInput);
             } else {
-                const warningsDiv = document.getElementById('warnings');
-                warningsDiv.innerHTML = '<p>Please enter a name for your custom room.</p>';
+                displayWarning('Please enter a name for your custom room.');
             };
         };
+
+        function displayWarning(warning) {
+            const warningsDiv = document.getElementById('warnings');
+            // Clear existing warning message
+            warningsDiv.textContent = "";
+
+            const warningsContent = document.createTextNode(warning);
+            // Display new warning message
+            warningsDiv.appendChild(warningsContent);
+        }
 
         socket.on('send_active_rooms', function (data) {
             // Populate select room dropdown with list of currently active rooms
@@ -91,15 +100,8 @@
             }
         });
 
-        // REFACTOR: Define a warnings function which takes a string as an argument and appends it to the warnings div.
-        socket.on('duplicate_username', function (data) {
-            var warningsDiv = document.getElementById('warnings');
-            warningsDiv.innerHTML = '<p>This username already exists in this room.</p>';
-        });
-
-        socket.on('duplicate_room_name', function (data) {
-            var warningsDiv = document.getElementById('warnings');
-            warningsDiv.innerHTML = '<p>A room with this name already exists.</p>';
+        socket.on('warning', function (data) {
+            displayWarning(data.warning);
         });
 
         socket.on('succesful_join', function (data) {

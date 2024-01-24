@@ -1,11 +1,18 @@
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from re import match
 
 app = Flask(__name__)
 app.secret_key = 'secret!'
 socketio = SocketIO(app, secret_key='secret!')
 
 active_rooms = {}
+
+def parse_string(string):
+    # the + in the following regex ensures that the string is non-empty
+    allowed_characters = r'^[a-zA-Z0-9_\-]+$'
+
+    return (match(allowed_characters, string) is not None) and (len(string) <= 20)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -29,18 +36,27 @@ def handle_join_attempt(data):
     username = data['username']
     new_room = data['new_room']
 
-    if not new_room:
-        if username in active_rooms[room]:
-            emit('duplicate_username', {'username': username, 'room': room})
-        else:
-            active_rooms[room].append(username)
-            emit('succesful_join', {'username': username, 'room': room})
+    permitted_username = parse_string(username)
+    permitted_room_name = parse_string(room)
+
+    if not permitted_username or not permitted_room_name:
+        warning = 'Names must be 20 characters or less and may only contain letters, numbers, hyphens, and underscores'
+        emit('warning', {'warning': warning, 'room': room})
     else:
-        if room in active_rooms:
-            emit('duplicate_room_name', {'username': username, 'room': room})
+        if not new_room:
+            if username in active_rooms[room]:
+                warning = f'The username {username} already exists in {room}'
+                emit('warning', {'warning': warning, 'room': room})
+            else:
+                active_rooms[room].append(username)
+                emit('succesful_join', {'username': username, 'room': room})
         else:
-            active_rooms[room] = [username]
-            emit('succesful_join', {'username': username, 'room': room})
+            if room in active_rooms:
+                warning = 'There is already an active room with this name'
+                emit('warning', {'warning': warning, 'room': room})
+            else:
+                active_rooms[room] = [username]
+                emit('succesful_join', {'username': username, 'room': room})
 
 
 @socketio.on('join_socket_room')
@@ -62,7 +78,7 @@ def handle_message(data):
 def handle_leave_room(data):
     room = data['room']
     username = data['username']
-    
+    print(f'{username} is leaving room {room}')
     leave_room(room)
     active_rooms[room].remove(username)
 

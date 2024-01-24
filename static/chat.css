@@ -4,6 +4,7 @@
 
 body {
     background-color: #b3e0ff;
+    color: #333333;
 }
 
 h1 {
@@ -31,9 +32,11 @@ h1 {
     overflow: scroll;
     padding-left: 1%;
     width: 85%;
-    height: 500px;
     text-align: left;
     float: left;
+    height: 500px;
+    margin-bottom: 20px;
+    word-wrap: break-word;
 }
 
 #user_list_box {
@@ -43,6 +46,7 @@ h1 {
     width: 10%;
     height: 500px;
     float: right;
+    margin-bottom: 20px;
 }
 
 form {
@@ -64,9 +68,7 @@ li {
 .displays {
     margin: auto;
     width: 90%;
-    height: 500px;
 }
-
 #message {
     padding-left: 1%;
     border: 2px solid #999999;
